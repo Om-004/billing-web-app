@@ -98,24 +98,6 @@ def send_invoice_email(to_email, pdf_path, customer):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         server.send_message(msg)
-#------------------make admin-----------
-@app.route("/make-admin/<username>")
-def make_admin(username):
-    if "user" not in session:
-        return redirect(url_for("login"))
-
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-
-    cur.execute(
-        "UPDATE users SET role='admin' WHERE username=?",
-        (username,)
-    )
-
-    conn.commit()
-    conn.close()
-
-    return f"User {username} is now admin"
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -138,29 +120,63 @@ def login():
         return render_template("login.html", error="Invalid credentials")
 
     return render_template("login.html")
+#------------------make admin-----------
+@app.route("/make-admin/<username>")
+def make_admin(username):
+    # Only logged-in user can access
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+
+        cur.execute(
+            "UPDATE users SET role='admin' WHERE username=?",
+            (username,)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return f"User '{username}' is now ADMIN. Logout and login again."
+
+    except Exception as e:
+        return f"Error making admin: {e}", 500
 
 # ---------------- REGISTER ----------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form["username"]
-        password = generate_password_hash(request.form["password"])
+        raw_password = request.form["password"]
+        hashed_password = generate_password_hash(raw_password)
 
         try:
             conn = sqlite3.connect(DB_PATH)
             cur = conn.cursor()
-            cur.execute(
-                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                (username, password, "user")
-            )
+
+            cur.execute("""
+                INSERT INTO users (username, password, role)
+                VALUES (?, ?, ?)
+            """, (username, hashed_password, "user"))
+
             conn.commit()
             conn.close()
+
             return redirect(url_for("login"))
+
         except sqlite3.IntegrityError:
-            return render_template("register.html", error="Username already exists")
+            return render_template(
+                "register.html",
+                error="Username already exists"
+            )
 
-    return render_template("register.html")
+        except Exception as e:
+            # 🔥 This prevents Render 500 crash
+            return f"Registration error: {e}", 500
 
+    return render_template("register.html") 
 # ---------------- LOGOUT ----------------
 @app.route("/logout")
 def logout():
