@@ -98,7 +98,24 @@ def send_invoice_email(to_email, pdf_path, customer):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         server.send_message(msg)
+#------------------make admin-----------
+@app.route("/make-admin/<username>")
+def make_admin(username):
+    if "user" not in session:
+        return redirect(url_for("login"))
 
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute(
+        "UPDATE users SET role='admin' WHERE username=?",
+        (username,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return f"User {username} is now admin"
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
