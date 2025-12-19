@@ -11,6 +11,7 @@ from reportlab.lib.pagesizes import A4
 w,h = A4
 from reportlab.pdfgen import canvas
 
+
 # ---------------- BASIC SETUP ----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -578,6 +579,3 @@ def payment_not_done(invoice_id):
     return redirect(url_for("admin_dashboard"))
 
 
-# ---------------- RUN ----------------
-if __name__ == "__main__":
-    app.run(debug=True)
