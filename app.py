@@ -66,26 +66,35 @@ def init_db():
     conn.close()
 # ---------------- CREATE DEFAULT ADMIN ----------------
 def create_admin():
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
 
-    cur.execute("SELECT * FROM users WHERE username='admin'")
-    if not cur.fetchone():
-        cur.execute(
-            "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-            (
-                "admin",
-                generate_password_hash("admin123"),
-                "admin"
-            )
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
         )
-        conn.commit()
+        """)
 
-    conn.close()
+        cur.execute("SELECT * FROM users WHERE username='admin'")
+        if not cur.fetchone():
+            cur.execute(
+                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                (
+                    "admin",
+                    generate_password_hash("admin123"),
+                    "admin"
+                )
+            )
+            conn.commit()
 
+        conn.close()
 
-# 🔥 CREATE DEFAULT ADMIN ON STARTUP
-create_admin()
+    except Exception as e:
+        print("Admin creation error:", e)
 
 # ---------------- TEST ----------------
 @app.route("/test")
@@ -643,5 +652,10 @@ def payment_not_done(invoice_id):
     conn.close()
 
     return redirect(url_for("admin_dashboard"))
+
+@app.before_first_request
+def setup_defaults():
+    init_db()
+    create_admin()
 
 
