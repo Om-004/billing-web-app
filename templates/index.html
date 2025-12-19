@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Generator</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h2>Invoice Generator</h2>
+        <form action="/logout" method="get">
+            <button class="btn-secondary">Logout</button>
+        </form>
+    </div>
+
+    <p class="user-info">
+        Logged in as <b>{{ session['user'] }}</b>
+        ({{ session['role'] }})
+        |
+        <a href="/history">Invoice History</a>
+        {% if session['role'] == 'admin' %}
+        | <a href="/admin">Admin Dashboard</a>
+        {% endif %}
+    </p>
+
+    <form method="post">
+
+        <label>Customer Name</label>
+        <input type="text" name="customer" required>
+
+        <label>Customer Email</label>
+        <input type="email" name="customer_email" required>
+
+        <label>Customer WhatsApp Number (International)</label>
+        <input 
+            type="tel"
+            name="customer_phone"
+            placeholder="CountryCode + Number (e.g. 14155552671)"
+            required
+        >
+        <label>Payment Mode</label>
+        <select name="payment_mode" required>
+        <option value="">--Select Payment Mode--</option>
+        <option value="Cash">Cash</option>
+        <option value="UPI">Through UPI</option>
+        <option value="Scanner">Through Scanner</option>
+        </select>
+        <br><br>
+        {% if session['role'] == 'admin' %}
+            <label>Is Payment Done?</label><br>
+            <select name="payment_status" required>
+                <option value="Pending">No</option>
+                <option value="Done">Yes</option>
+            </select>
+            <br><br>
+        {% endif %}
+
+
+        <h3>Items</h3>
+
+        <div id="items">
+            <div class="row">
+                <input type="text" name="item[]" placeholder="Item name" required>
+                <input type="number" name="qty[]" placeholder="Qty" required>
+                <input type="number" name="rate[]" placeholder="Rate" required>
+            </div>
+        </div>
+
+        <button type="button" onclick="addItem()">➕ Add Item</button>
+        <br><br>
+
+        <button type="submit">Generate Invoice</button>
+    </form>
+
+</div>
+
+<script>
+function addItem() {
+    const itemsDiv = document.getElementById("items");
+
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const item = document.createElement("input");
+    item.type = "text";
+    item.name = "item[]";
+    item.placeholder = "Item Name";
+    item.required = true;
+
+    const qty = document.createElement("input");
+    qty.type = "number";
+    qty.name = "qty[]";
+    qty.placeholder = "Qty";
+    qty.required = true;
+
+    const rate = document.createElement("input");
+    rate.type = "number";
+    rate.name = "rate[]";
+    rate.placeholder = "Rate";
+    rate.required = true;
+
+    row.appendChild(item);
+    row.appendChild(qty);
+    row.appendChild(rate);
+
+    itemsDiv.appendChild(row);
+}
+</script>
+
+
+</body>
+</html>

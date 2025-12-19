@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice History</title>
+</head>
+<body>
+
+<h2>Invoice History</h2>
+
+<p>
+    Logged in as: <b>{{ session['user'] }}</b> ({{ session['role'] }})
+</p>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>ID</th>
+        <th>Invoice No</th>
+        <th>User</th>
+        <th>Customer</th>
+        <th>Total</th>
+        <th>Date</th>
+        <th>Action</th>
+    </tr>
+
+    {% for inv in invoices %}
+    <tr>
+    <td>{{ inv[0] }}</td>   <!-- ID -->
+    <td>{{ inv[1] }}</td>   <!-- Invoice No -->
+    <td>{{ inv[2] }}</td>   <!-- User -->
+    <td>{{ inv[3] }}</td>   <!-- Customer -->
+    <td>₹ {{ inv[4] }}</td> <!-- Total -->
+    <td>{{ inv[5] }}</td>   <!-- Date -->
+    <td>
+        <a href="/download/{{ inv[0] }}">Download</a>
+    </td>
+ </tr>
+    {% endfor %}
+</table>
+
+<br>
+<a href="/">Back to Invoice</a> |
+<a href="/logout">Logout</a>
+
+</body>
+</html>

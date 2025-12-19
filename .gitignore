@@ -1,0 +1,5 @@
+bills/
+database.db
+payment_qr.png
+__pycache__/
+*.pyc

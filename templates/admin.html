@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+<h2>Admin Dashboard</h2>
+<p>Logged in as <b>{{ session['user'] }}</b></p>
+
+<h3>Summary</h3>
+<ul>
+    <li>Total Users: <b>{{ user_count }}</b></li>
+    <li>Total Invoices: <b>{{ invoice_count }}</b></li>
+    <li>Pending Invoices: <b>{{ pending_count }}</b></li>
+    <li>Sent Invoices: <b>{{ sent_count }}</b></li>
+    <li>Total Revenue: <b>₹ {{ revenue }}</b></li>
+</ul>
+
+<h3>Users</h3>
+<table>
+<tr><th>Username</th><th>Role</th></tr>
+{% for u in users %}
+<tr><td>{{ u[0] }}</td><td>{{ u[1] }}</td></tr>
+{% endfor %}
+</table>
+
+<h3>Invoices</h3>
+<table>
+<tr>
+<th>ID</th>
+<th>Invoice No</th>
+<th>User</th>
+<th>Customer</th>
+<th>customer_email</th>
+<th>customer_phone</th>
+<th>Total</th>
+<th>Payment Mode</th>
+<th>Payment Status</th>
+<th>Confirm Payment</th>
+<th>Date</th>
+<th>Action</th>
+</tr>
+
+{% for inv in invoices %}
+<tr>
+    <td>{{ inv[0] }}</td>   <!-- ID -->
+    <td>{{ inv[1] }}</td>   <!-- Invoice No -->
+    <td>{{ inv[2] }}</td>   <!-- User -->
+    <td>{{ inv[3] }}</td>   <!-- Customer -->
+    <td>{{ inv[4] }}</td>   <!-- Email -->
+    <td>{{ inv[5] }}</td>   <!-- Phone -->
+    <td>{{ inv[6] }}</td>   <!-- payment_mode -->
+    <td>{{ inv[7] }}</td>   <!-- payment_status -->
+    <td>
+        <a href="/payment_done/{{ inv[0] }}">Yes</a> |
+        <a href="/payment_not_done/{{ inv[0] }}">No</a>
+    </td>
+    <td>₹ {{ inv[8] }}</td> <!-- Total -->
+    <td>{{ inv[9] }}</td>   <!-- Date -->
+    
+    <td>
+        <a href="/download/{{ inv[0] }}">Download</a> |
+        <a href="/delete/{{ inv[0] }}">Delete</a>
+        <a href="/resend_whatsapp/{{ inv[0] }}">WhatsApp</a>
+        <a href="/resend_email/{{ inv[0] }}">Email</a>
+
+
+    </td>
+</tr>
+
+{% endfor %}
+</table>
+
+<div class="footer-links">
+<a href="/">Back</a> | <a href="/logout">Logout</a>
+</div>
+
+</div>
+
+</body>
+</html>

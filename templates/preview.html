@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Preview</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Invoice Preview</h2>
+
+    <p><b>Invoice No:</b> {{ invoice.invoice_no }}</p>
+    <p><b>Customer Name:</b> {{ invoice.customer }}</p>
+
+    <hr>
+
+    <h3>Items</h3>
+
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Rate</th>
+            <th>Amount</th>
+        </tr>
+
+        {% for item in invoice["items"] %}
+        <tr>
+            <td>{{ item[0] }}</td>
+            <td>{{ item[1] }}</td>
+            <td>{{ item[2] }}</td>
+            <td>₹ {{ item[3] }}</td>
+        </tr>
+        {% endfor %}
+
+        <tr>
+            <th colspan="3">Total</th>
+            <th>₹ {{ invoice.total }}</th>
+        </tr>
+    </table>
+
+    <hr>
+
+    <h3>Customer Contact</h3>
+    <p><b>Email:</b> {{ email }}</p>
+    <p><b>WhatsApp:</b> {{ phone }}</p>
+
+    <hr>
+
+    <div style="margin-top:20px;">
+
+        <!-- Confirm & Download -->
+        <a href="/download/{{ invoice_id }}">
+            <button>✅ Confirm & Download PDF</button>
+        </a>
+
+        <!-- WhatsApp Click-to-Chat -->
+        <a href="https://wa.me/{{ phone }}?text=Hello%20{{ invoice.customer }}%2C%0A%0AYour%20invoice%20({{ invoice.invoice_no }})%20is%20ready.%0APlease%20check%20your%20email%20for%20the%20invoice%20PDF.%0A%0AThank%20you%2C%0AAnadi%20Me%20Edsolutions"
+           target="_blank"
+           style="margin-left:15px;">
+            <button>📲 Send via WhatsApp</button>
+        </a>
+
+        <!-- Go Back -->
+        <a href="/" style="margin-left:15px;">
+            <button class="btn-secondary">⬅ Back</button>
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

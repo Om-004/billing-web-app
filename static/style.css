@@ -1,0 +1,136 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* --------- CONTAINER --------- */
+.container {
+    max-width: 900px;
+    margin: 30px auto;
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* --------- HEADER --------- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.user-info {
+    font-size: 14px;
+}
+
+/* --------- LINKS --------- */
+a {
+    text-decoration: none;
+    color: #1e88e5;
+    font-weight: 500;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* --------- FORM --------- */
+label {
+    font-weight: 600;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #1e88e5;
+}
+
+/* --------- ITEMS --------- */
+.row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* --------- BUTTONS --------- */
+button {
+    background: #1e88e5;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background: #1565c0;
+}
+
+.btn-danger {
+    background: #e53935;
+}
+
+.btn-danger:hover {
+    background: #c62828;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+/* --------- TABLE --------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #f1f3f6;
+}
+
+tr:hover {
+    background: #f9fbfd;
+}
+
+/* --------- FOOTER --------- */
+.footer-links {
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+/* --------- ALERT --------- */
+.error {
+    color: red;
+    margin-top: 10px;
+}

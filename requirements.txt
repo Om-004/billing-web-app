@@ -1,0 +1,6 @@
+Flask
+reportlab
+qrcode
+Pillow
+Werkzeug
+gunicorn
