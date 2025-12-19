@@ -8,19 +8,84 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from email.message import EmailMessage
 from datetime import datetime, date
 from reportlab.lib.pagesizes import A4
-w,h = A4
 from reportlab.pdfgen import canvas
-
 
 # ---------------- BASIC SETUP ----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-app = Flask(__name__)
-app.secret_key = "anadi_secret_key"
-
 BILL_DIR = os.path.join(BASE_DIR, "bills")
 os.makedirs(BILL_DIR, exist_ok=True)
+
+w, h = A4
+
+app = Flask(__name__)
+app.secret_key = "anadi_secret_key"
+#---------------------add database connection function-----------------
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_no TEXT,
+        username TEXT,
+        customer TEXT,
+        customer_email TEXT,
+        customer_phone TEXT,
+        total REAL,
+        payment_mode TEXT,
+        payment_status TEXT,
+        status TEXT,
+        date TEXT
+    )
+    """)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS invoice_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_id INTEGER,
+        item_name TEXT,
+        qty INTEGER,
+        rate REAL,
+        amount REAL,
+        FOREIGN KEY (invoice_id) REFERENCES invoices(id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+# ---------------- CREATE DEFAULT ADMIN ----------------
+def create_admin():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM users WHERE username='admin'")
+    if not cur.fetchone():
+        cur.execute(
+            "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+            (
+                "admin",
+                generate_password_hash("admin123"),
+                "admin"
+            )
+        )
+        conn.commit()
+
+    conn.close()
+
+
+# 🔥 CREATE DEFAULT ADMIN ON STARTUP
+create_admin()
 
 # ---------------- TEST ----------------
 @app.route("/test")
@@ -29,10 +94,10 @@ def test():
 
 # ---------------- EMAIL ----------------
 def send_invoice_email(to_email, pdf_path, customer):
-    EMAIL_ADDRESS = "omprakashgo2024@gmail.com"
+    EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
     EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
-    if not EMAIL_PASSWORD:
+    if not EMAIL_ADDRESS or not EMAIL_PASSWORD:
         return
 
     msg = EmailMessage()
@@ -69,10 +134,11 @@ def login():
         conn.close()
 
         if row and check_password_hash(row[0], password):
+            session.clear()              # 🔥 FIX (Problem 3)
             session["user"] = username
             session["role"] = row[1]
             return redirect(url_for("index"))
-
+        
         return render_template("login.html", error="Invalid credentials")
 
     return render_template("login.html")
@@ -117,7 +183,7 @@ def index():
 
     customer = request.form["customer"]
     customer_email = request.form["customer_email"]
-    customer_phone = request.form["customer_phone"]
+    customer_phone = request.form["customer_phone"] 
     payment_mode = request.form["payment_mode"]
     items = request.form.getlist("item[]")
     qtys = request.form.getlist("qty[]")
@@ -182,8 +248,8 @@ def index():
             qtys[i],
             rates[i],
             amount
-        ))
-
+            )
+    )
     conn.commit()
     conn.close()
     #------------- PDF GENERATION --------------
