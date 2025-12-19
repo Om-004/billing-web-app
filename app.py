@@ -1,6 +1,5 @@
 import os
 import sqlite3
-from turtle import width
 import qrcode
 import smtplib
 
@@ -9,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from email.message import EmailMessage
 from datetime import datetime, date
 from reportlab.lib.pagesizes import A4
+w,h = A4
 from reportlab.pdfgen import canvas
 
 # ---------------- BASIC SETUP ----------------
