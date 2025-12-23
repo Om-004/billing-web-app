@@ -198,8 +198,8 @@ def index():
     customer_phone = request.form["customer_phone"] 
     payment_mode = request.form["payment_mode"]
     items = request.form.getlist("item[]")
-    qtys = request.form.getlist("qty[]")
-    rates = request.form.getlist("rate[]")
+    qtys= float(request.form.getlist('qty[]')[0])
+    rates= float(request.form.getlist('rate[]')[0])
     if session.get("role") == "admin":
         payment_status = request.form.get("payment_status", "Pending")
     else:
