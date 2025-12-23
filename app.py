@@ -212,10 +212,10 @@ def index():
     item_data = []
     
     for i in range(len(items)):
-    try:
-        qty = Decimal(qtys[i]) if qtys[i] else Decimal('0')
+        try:
+            qty = Decimal(qtys[i]) if qtys[i] else Decimal('0')
             rate = Decimal(rates[i]) if rates[i] else Decimal('0')
-            amount = round(qty * ratem 2)
+            amount = round(qty * rate, 2)  # FIXED: Changed "ratem" to "rate" and added comma
             total += amount
             item_data.append((items[i], qty, rate, amount))
         except (ValueError, IndexError):
@@ -225,8 +225,9 @@ def index():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO invoices (username, customer, customer_email, customer_phone, payment_mode, payment_status, total, date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO invoices (username, customer, customer_email, customer_phone, 
+                              payment_mode, payment_status, status, total, date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         session["user"],
         customer,
@@ -234,7 +235,8 @@ def index():
         customer_phone,
         payment_mode,
         payment_status,  
-        total,
+        "Pending",  # Added missing status field
+        float(total),  # Convert Decimal to float for SQLite
         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ))
     
@@ -253,9 +255,8 @@ def index():
     payment_mode = pay[0] if pay else "N/A"
     payment_status = pay[1] if pay else "Pending"
 
-    for i in range(len(items)):
-        amount = float(qtys[i]) * float(rates[i])
-
+    # FIXED: Use item_data list instead of original form data
+    for item_name, qty, rate, amount in item_data:
         cur.execute("""
             INSERT INTO invoice_items (
                 invoice_id, item_name, qty, rate, amount
@@ -263,20 +264,21 @@ def index():
             VALUES (?, ?, ?, ?, ?)
         """, (
             invoice_id,
-            items[i],
-            qtys[i],
-            rates[i],
-            amount
-            )
-    )
+            item_name,
+            float(qty),  # Convert Decimal to float
+            float(rate),  # Convert Decimal to float
+            float(amount)  # Convert Decimal to float
+        ))
+    
     conn.commit()
     conn.close()
+    
     #------------- PDF GENERATION --------------
     pdf_path = os.path.join(BILL_DIR, f"{invoice_no}.pdf")
     qr_path = os.path.join(BILL_DIR, f"{invoice_no}_qr.png")
 
     # ---------- QR ----------
-    upi = f"upi://pay?pa=bindu62013928@ybl&pn=Anadi&am={total}&cu=INR"
+    upi = f"upi://pay?pa=bindu62013928@ybl&pn=Anadi&am={float(total):.2f}&cu=INR"
     qrcode.make(upi).save(qr_path)
 
     # ---------- PDF ----------
@@ -318,23 +320,32 @@ def index():
     pdf.setFont("Helvetica", 11)
 
     for it in item_data:
-        pdf.drawString(40, y, it[0])
-        pdf.drawString(260, y, f"{it[1]:.2f}")  # for qty
-        pdf.drawString(320, y, f"{it[2]:.2f}")  # for rate
-        pdf.drawString(400, y, f"{it[3]:.2f}")
+        pdf.drawString(40, y, str(it[0]))
+        pdf.drawString(260, y, f"{float(it[1]):.2f}")  # Convert Decimal to float for display
+        pdf.drawString(320, y, f"{float(it[2]):.2f}")  # Convert Decimal to float for display
+        pdf.drawString(400, y, f"{float(it[3]):.2f}")
         y -= 20
 
     # ---------- TOTAL ----------
     pdf.setFont("Helvetica-Bold", 12)
     pdf.drawRightString(360, y - 10, "Total:")
-    pdf.drawString(380, y - 10, f"₹ {total:.2f}")
+    pdf.drawString(380, y - 10, f"₹ {float(total):.2f}")
 
     # ==================================================
-    # FIXED PAYMENT SECTION (CLEAN PREVIEW)
+    # FIXED: Dynamic positioning for payment section
     # ==================================================
-
-    payment_base_y = 140  # fixed bottom section
-
+    
+    # Calculate available space
+    payment_section_height = 180
+    min_y = 50  # Minimum space from bottom
+    
+    if y - payment_section_height < min_y:
+        # Not enough space, start new page
+        pdf.showPage()
+        payment_base_y = h - 200
+    else:
+        payment_base_y = y - payment_section_height
+    
     pdf.line(40, payment_base_y + 120, w - 40, payment_base_y + 120)
 
     # GST NOTE (ABOVE QR)
@@ -368,20 +379,21 @@ def index():
     pdf.save()
 
     session["last_invoice"] = {
-    "invoice_no": invoice_no,
-    "customer": customer,
-    "items": item_data,
-    "total": total
-}   
+        "invoice_no": invoice_no,
+        "customer": customer,
+        "items": item_data,
+        "total": total
+    }   
     session["email_data"] = {
-    "customer_email": customer_email,
-    "customer": customer
-}
+        "customer_email": customer_email,
+        "customer": customer
+    }
     session["whatsapp_data"] = {
-    "phone": customer_phone
-}
+        "phone": customer_phone
+    }
 
     return redirect(url_for("preview_invoice", invoice_id=invoice_id))
+
 #----------preview invoice ----------
 @app.route("/preview/<int:invoice_id>")
 def preview_invoice(invoice_id):
@@ -662,6 +674,3 @@ def payment_not_done(invoice_id):
     conn.close()
 
     return redirect(url_for("admin_dashboard"))
-
-
-
