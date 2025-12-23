@@ -9,6 +9,9 @@ from email.message import EmailMessage
 from datetime import datetime, date
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from decimal import Decimal
+
+
 
 # ---------------- BASIC SETUP ----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -55,7 +58,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         invoice_id INTEGER,
         item_name TEXT,
-        qty INTEGER,
+        qty REAL,
         rate REAL,
         amount REAL,
         FOREIGN KEY (invoice_id) REFERENCES invoices(id)
@@ -198,22 +201,26 @@ def index():
     customer_phone = request.form["customer_phone"] 
     payment_mode = request.form["payment_mode"]
     items = request.form.getlist("item[]")
-    qtys= float(request.form.getlist('qty[]')[0])
-    rates= float(request.form.getlist('rate[]')[0])
+    qtys = request.form.getlist("qty[]")  
+    rates = request.form.getlist("rate[]") 
     if session.get("role") == "admin":
         payment_status = request.form.get("payment_status", "Pending")
     else:
         payment_status = "Pending"
-
-
-    total = 0
+    
+    total = Decimal('0')
     item_data = []
-
+    
     for i in range(len(items)):
-        amount = float(qtys[i]) * float(rates[i])
-        total += amount
-        item_data.append((items[i], qtys[i], rates[i], amount))
-
+    try:
+        qty = Decimal(qtys[i]) if qtys[i] else Decimal('0')
+            rate = Decimal(rates[i]) if rates[i] else Decimal('0')
+            amount = round(qty * ratem 2)
+            total += amount
+            item_data.append((items[i], qty, rate, amount))
+        except (ValueError, IndexError):
+            continue
+    
     # ---------- SAVE TO DB ----------
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -312,8 +319,8 @@ def index():
 
     for it in item_data:
         pdf.drawString(40, y, it[0])
-        pdf.drawString(260, y, str(it[1]))
-        pdf.drawString(320, y, str(it[2]))
+        pdf.drawString(260, y, f"{it[1]:.2f}")  # for qty
+        pdf.drawString(320, y, f"{it[2]:.2f}")  # for rate
         pdf.drawString(400, y, f"{it[3]:.2f}")
         y -= 20
 
